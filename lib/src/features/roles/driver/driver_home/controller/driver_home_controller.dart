@@ -1,0 +1,43 @@
+import 'package:eagle_cars/src/common/utils/custom_snackbar.dart';
+import 'package:eagle_cars/src/router/routes.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
+
+class DriverHomeController extends ChangeNotifier {
+  bool? locationAllowed;
+
+  Future<void> getPermission(BuildContext context, {bool? again}) async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always) {
+          locationAllowed = true;
+          return;
+        }
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.unableToDetermine) {
+          showSnackbar(
+              message: 'Location permission is denied!', isError: true);
+          locationAllowed = null;
+          context.pushReplacementNamed(AppRoute.locationDeniedPage);
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        showSnackbar(message: 'Location is permanently denied!', isError: true);
+        locationAllowed = false;
+        context.pushReplacementNamed(AppRoute.locationDeniedPage);
+      }
+      if (again == true) {
+        context.pushReplacementNamed(AppRoute.driverHomePage);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  void goToHome(BuildContext context) =>
+      context.pushReplacementNamed(AppRoute.driverHomePage);
+}
